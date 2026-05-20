@@ -1,5 +1,7 @@
 # 🚀 Linux Bash Theme
+## 📸 Preview
 
+![Bash Theme Preview](screenshot.png)
 ---
 
 ## ✨ Features
