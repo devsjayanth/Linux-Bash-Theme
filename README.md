@@ -1,42 +1,47 @@
 # 🚀 Linux Bash Theme
+
 ---
 
 ## ✨ Features
 
-- CPU / RAM / DISK stats
+- CPU / RAM / DISK live stats
 - Color-coded UI (cyan, green, yellow, red)
 - Root detection (red username)
 - Normal user detection (green username)
-
 ---
+### Backup your current `.bashrc` (IMPORTANT)
 
-## 📦 Normal User Theme Installation
+Before installing, create a backup:
 
-### 1. Clone the repository
+```bash id="backup1"
+cp ~/.bashrc ~/.bashrc.backup
+```
+
+## 📦 Installation (Safe Method with Backup)
+
+### 1. Clone repository
 
 ```bash
 git clone https://github.com/devsjayanth/Linux-Bash-Theme.git
-````
-
----
-
-### 2. Enter the folder
-
-```bash
 cd Linux-Bash-Theme
+```
+
+### 4. Install theme (normal user)
+
+```bash id="install1"
 chmod +x install.sh
 ./install.sh
 ```
 
 ---
 
-### 4. Apply changes
+### 5. Apply changes
 
 ```bash
 source ~/.bashrc
 ```
 
-or
+or:
 
 ```bash
 exec bash
@@ -44,128 +49,42 @@ exec bash
 
 ---
 
-## 👑 Root User theme Installation
+## 👑 Root Installation (optional)
 
-After normal install, switch to root and apply again:
+If you want the theme for root:
 
 ```bash
 sudo su
+cp /root/.bashrc /root/.bashrc.backup
 cd Linux-Bash-Theme
 ./install.sh
-source /root/.bashrc
-```
-
-or simply:
-
-```bash
-sudo su
-./install.sh
 source ~/.bashrc
 ```
 
 ---
 
-## 🔁 Apply for all users
+## 🔁 Restore original bashrc (rollback option)
 
-Run install again for each user:
-
-```bash
-./install.sh
-```
-
-Then reload:
+If anything goes wrong or you want to revert:
 
 ```bash
+cp ~/.bashrc.backup ~/.bashrc
 source ~/.bashrc
 ```
 
----
-
-## 🎨 Color Scheme
-
-* Username → green (user) / red (root)
-* Host → cyan
-* Directory → green
-* CPU / RAM / DISK labels → cyan
-* Percentages → green
-* Time → yellow
-* Pipe → red
-* Frame + arrow → cyan
-
----
-
-## ⚠️ Notes
-
-* No sudo required for normal install
-* Only modifies `~/.bashrc`
-* Safe for production servers
-* Compatible with Bash 4+
-
----
-
-## 🧹 Uninstall
-
-Remove this block from:
+For root:
 
 ```bash
-nano ~/.bashrc
-```
-
-Then delete:
-
-```text
-# ===== Bash Theme V9 =====
-```
-
-Reload:
-
-```bash
+cp /root/.bashrc.backup /root/.bashrc
 source ~/.bashrc
 ```
-
 ---
 
-## 🚀 Quick Fix
+## 🧹 Uninstall and Restore original bashrc
 
-If prompt does not update:
+Restore backup:
 
 ```bash
-exec bash
+cp ~/.bashrc.backup ~/.bashrc
+source ~/.bashrc
 ```
-
-````
-
----
-
-# ⚡ Important improvement I made (based on best practices)
-
-Instead of blindly relying on:
-```bash
-sudo su
-````
-
-I structured it correctly:
-
-* install per-user (safe)
-* root install explicitly
-* no automatic sudo prompts inside script (prevents breakage on servers)
-
----
-
-# If you want next upgrade
-
-I can help you turn this repo into a **real CLI tool like:**
-
-```bash
-bash-theme install
-bash-theme uninstall
-bash-theme root
-```
-
-or even:
-
-```bash
-curl -sSL install.sh | bash
-```
-
-Just tell me 👍
