@@ -17,7 +17,7 @@ Before installing, create a backup:
 cp ~/.bashrc ~/.bashrc.backup
 ```
 
-## 📦 Installation (Safe Method with Backup)
+## 📦 Installation
 
 ### 1. Clone repository
 
