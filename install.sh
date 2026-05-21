@@ -5,8 +5,6 @@ install_prompt() {
     local file="$HOME/.bashrc"
     touch "$file" 2>/dev/null || return
 
-    # BUG 1 FIX: only remove if BOTH markers exist — prevents sed eating
-    # everything after the start marker if the end marker is ever missing
     if grep -q "# ===== Bash Theme =====" "$file" 2>/dev/null && \
        grep -q "# ===== End Bash Theme =====" "$file" 2>/dev/null; then
         sed -i "/# ===== Bash Theme =====/,/# ===== End Bash Theme =====/d" "$file"
@@ -14,8 +12,6 @@ install_prompt() {
 
 cat >> "$file" <<'EOF'
 # ===== Bash Theme =====
-
-# Writes result to __cpu_result — no subshell so state persists between calls
 __cpu_usage() {
     local _user _nice _system _idle _iowait _irq _softirq _steal
     read -r _ _user _nice _system _idle _iowait _irq _softirq _steal _ \
@@ -52,8 +48,6 @@ __ram_usage() {
 }
 
 __disk_usage() {
-    # BUG 2 FIX: (+0) coerces empty/missing $5 to 0 instead of printing
-    # an empty string that breaks integer comparisons in __prompt
     df / 2>/dev/null | awk 'NR==2{gsub(/%/,"",$5); print ($5+0)}' || echo 0
 }
 
@@ -70,14 +64,11 @@ __prompt() {
     local USER_COLOR USERNAME PROMPT_CHAR
     if [ "$(id -u)" -eq 0 ]; then
         USER_COLOR="${RED}"
-        USERNAME="root"
+        USERNAME="Root"
         PROMPT_CHAR="${RED}#❯${RESET}"
     else
         USER_COLOR="${GREEN}"
         USERNAME="\u"
-        # single-quoted \$ keeps backslash-dollar literal in the variable so
-        # PS1's own parser sees \$ (→ $) instead of bash expanding $❯ as $❯
-        # where $< nothing > would be empty and corrupt the prompt
         PROMPT_CHAR="${GREEN}"'\$❯'"${RESET}"
     fi
 
@@ -101,12 +92,12 @@ __prompt() {
     else                          DISK_COLOR="\[\e[1;92m\]"; fi
 
     local PIPE="${RED}|${RESET}"  
-    PS1="\n${PINK}╭─${RESET}${USER_COLOR}${USERNAME}${RESET}${BYELLOW}@${RESET}${CYAN}\h${RESET}\
-${PINK}[${RESET}${BBLUE}\w${RESET}${PINK}]${RESET} ${PIPE} \
+    PS1="\n${PINK}╭─${PINK}❪${RESET}${RESET}${USER_COLOR}${USERNAME}${RESET}${BYELLOW}@${RESET}${CYAN}\h${RESET}\
+${PINK}❪${RESET}${BBLUE}\w${RESET}${PINK}❫${RESET} \
 ${CYAN}CPU:${RESET} ${CPU_COLOR}${CPU}%${RESET} ${PIPE} \
 ${CYAN}RAM:${RESET} ${RAM_COLOR}${RAM}%${RESET} ${PIPE} \
-${CYAN}DISK:${RESET} ${DISK_COLOR}${DISK}%${RESET}
-${PINK}╰─${RESET}${PROMPT_CHAR} "
+${CYAN}DISK:${RESET} ${DISK_COLOR}${DISK}%${RESET} ${PINK}❫${RESET}
+${PINK}╰─❫${RESET}${PROMPT_CHAR} "
 }
 
 PROMPT_COMMAND=__prompt
