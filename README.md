@@ -50,7 +50,6 @@ cp /root/.bashrc /root/.bashrc.backup
 ### Install & Apply
 ```
 sudo su
-cd Linux-Bash-Theme
 ./install.sh
 source ~/.bashrc
 exec bash
