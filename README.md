@@ -50,6 +50,8 @@ cp /root/.bashrc /root/.bashrc.backup
 ### Install & Apply
 ```
 sudo su
+```
+```
 ./install.sh
 source ~/.bashrc
 exec bash
