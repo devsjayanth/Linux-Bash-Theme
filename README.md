@@ -25,12 +25,12 @@ cp ~/.bashrc ~/.bashrc.backup
 
 ```bash
 git clone https://github.com/devsjayanth/Linux-Bash-Theme.git
-cd Linux-Bash-Theme
 ```
 
 ### 4. Install theme (normal user)
 
-```bash id="install1"
+```bash
+cd Linux-Bash-Theme
 chmod +x install.sh
 ./install.sh
 ```
