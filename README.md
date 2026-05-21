@@ -23,13 +23,13 @@ cp ~/.bashrc ~/.bashrc.backup
 ### 1. Clone repository
 
 ```bash
-git clone https://github.com/devsjayanth/Linux-Bash-Theme.git
+git clone https://github.com/devsjayanth/Terminal-bash-theme.git
 ```
 
 ### 4. Install & Apply changes (normal user)
 
 ```bash
-cd Linux-Bash-Theme
+cd Terminal-bash-theme
 chmod +x install.sh
 ./install.sh
 source ~/.bashrc
