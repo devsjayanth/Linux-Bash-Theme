@@ -49,11 +49,11 @@ __prompt() {
     local st=$?
 
     # COLORS
-    CYAN="\[\e[96m\]"        # frame + host + arrow
-    BLUE="\[\e[94m\]"        # CPU/RAM/DISK labels
-    GREEN="\[\e[92m\]"       # percentages + directory + user
-    RED="\[\e[1;31m\]"       # pipe + root username
-    YELLOW="\[\e[1;33m\]"    # time
+    CYAN="\[\e[96m\]"        
+    BLUE="\[\e[94m\]"        
+    GREEN="\[\e[92m\]"       
+    RED="\[\e[1;31m\]"       
+    YELLOW="\[\e[1;33m\]"   
     RESET="\[\e[0m\]"
 
     # USER COLOR RULE
@@ -74,7 +74,7 @@ __prompt() {
 
     PS1="
 ${CYAN}╭─${RESET} ${USER_COLOR}${USERNAME}${RESET}@${CYAN}\h${RESET} ${PIPE} \
-${GREEN}\w${RESET} ${PIPE} \
+${BLUE}\w${RESET} ${PIPE} \
 ${YELLOW}${TM}${RESET} ${PIPE} \
 ${BLUE}CPU${RESET} ${GREEN}${CPU}%${RESET} ${PIPE} \
 ${BLUE}RAM${RESET} ${GREEN}${RAM}%${RESET} ${PIPE} \
