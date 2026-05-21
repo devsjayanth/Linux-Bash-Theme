@@ -1,96 +1,118 @@
 #!/bin/bash
-
 BLOCK_ID="Bash Theme"
 
 install_prompt() {
     local file="$HOME/.bashrc"
-
     touch "$file" 2>/dev/null || return
-    grep -q "$BLOCK_ID" "$file" 2>/dev/null && return
+
+    # BUG 1 FIX: only remove if BOTH markers exist — prevents sed eating
+    # everything after the start marker if the end marker is ever missing
+    if grep -q "# ===== Bash Theme =====" "$file" 2>/dev/null && \
+       grep -q "# ===== End Bash Theme =====" "$file" 2>/dev/null; then
+        sed -i "/# ===== Bash Theme =====/,/# ===== End Bash Theme =====/d" "$file"
+    fi
 
 cat >> "$file" <<'EOF'
-
 # ===== Bash Theme =====
 
+# Writes result to __cpu_result — no subshell so state persists between calls
 __cpu_usage() {
-    read -r cpu user nice system idle iowait irq softirq steal _ < /proc/stat 2>/dev/null || {
-        echo 0; return
-    }
+    local _user _nice _system _idle _iowait _irq _softirq _steal
+    read -r _ _user _nice _system _idle _iowait _irq _softirq _steal _ \
+        < /proc/stat 2>/dev/null || { __cpu_result=0; return; }
 
-    total=$((user + nice + system + idle + iowait + irq + softirq + steal))
+    local _total _diff_idle _diff_total
+    _total=$(( _user + _nice + _system + _idle + _iowait + _irq + _softirq + _steal ))
 
     if [ -z "$__cpu_total" ]; then
-        __cpu_idle=$idle
-        __cpu_total=$total
-        echo 0
+        __cpu_idle=$_idle
+        __cpu_total=$_total
+        __cpu_result=0
         return
     fi
 
-    diff_idle=$((idle - __cpu_idle))
-    diff_total=$((total - __cpu_total))
+    _diff_idle=$(( _idle - __cpu_idle ))
+    _diff_total=$(( _total - __cpu_total ))
+    __cpu_idle=$_idle
+    __cpu_total=$_total
 
-    __cpu_idle=$idle
-    __cpu_total=$total
-
-    [ "$diff_total" -le 0 ] && echo 0 && return
-    echo $(( (100 * (diff_total - diff_idle)) / diff_total ))
+    if [ "$_diff_total" -le 0 ]; then
+        __cpu_result=0
+    else
+        __cpu_result=$(( (100 * (_diff_total - _diff_idle)) / _diff_total ))
+        # BUG 3 FIX: clamp to 0-100 — counter jumps after sleep/resume can
+        # produce values like 120% without this guard
+        [ "$__cpu_result" -lt 0   ] && __cpu_result=0
+        [ "$__cpu_result" -gt 100 ] && __cpu_result=100
+    fi
 }
 
 __ram_usage() {
-    awk '/MemTotal/ {t=$2} /MemAvailable/ {a=$2}
-    END {if (t>0) print int((t-a)*100/t); else print 0}' /proc/meminfo 2>/dev/null || echo 0
+    awk '/MemTotal/{t=$2}/MemAvailable/{a=$2}
+    END{if(t>0)print int((t-a)*100/t);else print 0}' \
+    /proc/meminfo 2>/dev/null || echo 0
 }
 
 __disk_usage() {
-    df / 2>/dev/null | awk 'NR==2 {gsub(/%/,"",$5); print $5}' || echo 0
+    df / 2>/dev/null | awk 'NR==2{gsub(/%/,"",$5); print ($5+0)}' || echo 0
 }
 
 __prompt() {
-    local st=$?
-
-    # COLORS
-    CYAN="\[\e[96m\]"        
-    BLUE="\[\e[94m\]"        
-    GREEN="\[\e[92m\]"       
-    RED="\[\e[1;31m\]"       
-    YELLOW="\[\e[1;33m\]"   
+    local CYAN GREEN RED RESET PINK BBLUE BYELLOW
     RESET="\[\e[0m\]"
+    PINK="\[\e[1;95m\]"     # bright magenta — frame
+    BBLUE="\[\e[1;94m\]"    # bright blue    — working dir
+    CYAN="\[\e[1;96m\]"     # bright cyan    — hostname, metric labels
+    GREEN="\[\e[1;92m\]"    # bright green   — user
+    RED="\[\e[1;91m\]"      # bright red     — root
+    BYELLOW="\[\e[1;93m\]"  # bright yellow  — @
 
-    # USER COLOR RULE
+    local USER_COLOR USERNAME PROMPT_CHAR
     if [ "$(id -u)" -eq 0 ]; then
-        USER_COLOR="${RED}"       
+        USER_COLOR="${RED}"
         USERNAME="root"
+        PROMPT_CHAR="${RED}#❯${RESET}"
     else
-        USER_COLOR="${GREEN}"     
+        USER_COLOR="${GREEN}"
         USERNAME="\u"
+        # single-quoted \$ keeps backslash-dollar literal in the variable so
+        # PS1's own parser sees \$ (→ $) instead of bash expanding $❯ as $❯
+        # where $< nothing > would be empty and corrupt the prompt
+        PROMPT_CHAR="${GREEN}"'\$❯'"${RESET}"
     fi
 
-    CPU=$(__cpu_usage)
+    __cpu_usage
+    local CPU RAM DISK
+    CPU=$__cpu_result
     RAM=$(__ram_usage)
     DISK=$(__disk_usage)
-    TM=$(date +%H:%M 2>/dev/null || echo "--:--")
 
-    PIPE="${RED}|${RESET}"
+    local CPU_COLOR RAM_COLOR DISK_COLOR
+    if   [ "$CPU"  -ge 80 ]; then CPU_COLOR="\[\e[1;91m\]"
+    elif [ "$CPU"  -ge 50 ]; then CPU_COLOR="\[\e[1;93m\]"
+    else                          CPU_COLOR="\[\e[1;92m\]"; fi
 
-    PS1="
-${CYAN}╭─${RESET} ${USER_COLOR}${USERNAME}${RESET}@${CYAN}\h${RESET} ${PIPE} \
-${BLUE}\w${RESET} ${PIPE} \
-${YELLOW}${TM}${RESET} ${PIPE} \
-${BLUE}CPU${RESET} ${GREEN}${CPU}%${RESET} ${PIPE} \
-${BLUE}RAM${RESET} ${GREEN}${RAM}%${RESET} ${PIPE} \
-${BLUE}DISK${RESET} ${GREEN}${DISK}%${RESET}
-${CYAN}╰─${RESET} ${CYAN}➤${RESET} "
+    if   [ "$RAM"  -ge 80 ]; then RAM_COLOR="\[\e[1;91m\]"
+    elif [ "$RAM"  -ge 50 ]; then RAM_COLOR="\[\e[1;93m\]"
+    else                          RAM_COLOR="\[\e[1;92m\]"; fi
+
+    if   [ "$DISK" -ge 90 ]; then DISK_COLOR="\[\e[1;91m\]"
+    elif [ "$DISK" -ge 70 ]; then DISK_COLOR="\[\e[1;93m\]"
+    else                          DISK_COLOR="\[\e[1;92m\]"; fi
+
+    local PIPE="${PINK}|${RESET}"
+    PS1="\n${PINK}╭─ (${RESET} ${USER_COLOR}${USERNAME}${RESET}${BYELLOW}@${RESET}${CYAN}\h${RESET} ${PIPE} \
+${BBLUE}\w${RESET} ${PIPE} \
+${CYAN}CPU:${RESET} ${CPU_COLOR}${CPU}%${RESET} ${PIPE} \
+${CYAN}RAM:${RESET} ${RAM_COLOR}${RAM}%${RESET} ${PIPE} \
+${CYAN}DISK:${RESET} ${DISK_COLOR}${DISK}%${RESET} ${PINK})${RESET}
+${PINK}╰─${RESET} ${PROMPT_CHAR} "
 }
 
 PROMPT_COMMAND=__prompt
-
 # ===== End Bash Theme =====
 EOF
 }
 
 install_prompt
-
-source "$HOME/.bashrc" 2>/dev/null
-
-echo "Bash Theme installed."
-echo "Run: source ~/.bashrc"
+echo "Bash Theme installed. Run: source ~/.bashrc"
