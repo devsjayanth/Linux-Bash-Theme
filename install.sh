@@ -40,8 +40,6 @@ __cpu_usage() {
         __cpu_result=0
     else
         __cpu_result=$(( (100 * (_diff_total - _diff_idle)) / _diff_total ))
-        # BUG 3 FIX: clamp to 0-100 — counter jumps after sleep/resume can
-        # produce values like 120% without this guard
         [ "$__cpu_result" -lt 0   ] && __cpu_result=0
         [ "$__cpu_result" -gt 100 ] && __cpu_result=100
     fi
@@ -54,6 +52,8 @@ __ram_usage() {
 }
 
 __disk_usage() {
+    # BUG 2 FIX: (+0) coerces empty/missing $5 to 0 instead of printing
+    # an empty string that breaks integer comparisons in __prompt
     df / 2>/dev/null | awk 'NR==2{gsub(/%/,"",$5); print ($5+0)}' || echo 0
 }
 
@@ -100,13 +100,13 @@ __prompt() {
     elif [ "$DISK" -ge 70 ]; then DISK_COLOR="\[\e[1;93m\]"
     else                          DISK_COLOR="\[\e[1;92m\]"; fi
 
-    local PIPE="${PINK}|${RESET}"
-    PS1="\n${PINK}╭─ (${RESET} ${USER_COLOR}${USERNAME}${RESET}${BYELLOW}@${RESET}${CYAN}\h${RESET} ${PIPE} \
-${BBLUE}\w${RESET} ${PIPE} \
+    local PIPE="${RED}|${RESET}"  
+    PS1="\n${PINK}╭─${RESET}${USER_COLOR}${USERNAME}${RESET}${BYELLOW}@${RESET}${CYAN}\h${RESET}\
+${PINK}[${RESET}${BBLUE}\w${RESET}${PINK}]${RESET} ${PIPE} \
 ${CYAN}CPU:${RESET} ${CPU_COLOR}${CPU}%${RESET} ${PIPE} \
 ${CYAN}RAM:${RESET} ${RAM_COLOR}${RAM}%${RESET} ${PIPE} \
-${CYAN}DISK:${RESET} ${DISK_COLOR}${DISK}%${RESET} ${PINK})${RESET}
-${PINK}╰─${RESET} ${PROMPT_CHAR} "
+${CYAN}DISK:${RESET} ${DISK_COLOR}${DISK}%${RESET}
+${PINK}╰─${RESET}${PROMPT_CHAR} "
 }
 
 PROMPT_COMMAND=__prompt
