@@ -6,8 +6,7 @@
 
 ## ✨ Features
 
-- CPU / RAM / DISK live stats
-- Color-coded UI (cyan, green, yellow, red)
+- CPU / RAM / DISK stats
 - Root detection (red username)
 - Normal user detection (green username)
 ---
@@ -27,25 +26,13 @@ cp ~/.bashrc ~/.bashrc.backup
 git clone https://github.com/devsjayanth/Linux-Bash-Theme.git
 ```
 
-### 4. Install theme (normal user)
+### 4. Install & Apply changes (normal user)
 
 ```bash
 cd Linux-Bash-Theme
 chmod +x install.sh
 ./install.sh
-```
-
----
-
-### 5. Apply changes
-
-```bash
 source ~/.bashrc
-```
-
-or:
-
-```bash
 exec bash
 ```
 
@@ -61,6 +48,7 @@ cp /root/.bashrc /root/.bashrc.backup
 cd Linux-Bash-Theme
 ./install.sh
 source ~/.bashrc
+exec bash
 ```
 
 ---
