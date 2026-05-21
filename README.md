@@ -42,9 +42,14 @@ exec bash
 
 If you want the theme for root:
 
+### Backup
 ```bash
 sudo su
 cp /root/.bashrc /root/.bashrc.backup
+```
+### Install & Apply
+```
+sudo su
 cd Linux-Bash-Theme
 ./install.sh
 source ~/.bashrc
