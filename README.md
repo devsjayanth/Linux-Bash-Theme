@@ -1,4 +1,4 @@
-# 🖥️ Linux Bash Theme
+# 🖥️ Terminal Theme (Bash Shell)
 ## 📸 Preview
 
 ![Bash Theme Preview](screenshot.png)
